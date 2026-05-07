@@ -15,6 +15,15 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
+  @keyframes drift {
+    from { background-position: 0 0, 0 0, 0 0, 0 0; }
+    to { background-position: 50px 50px, 50px 50px, 0 0, 0 0; }
+  }
+  @keyframes crt-flicker {
+    0% { opacity: 0.1; }
+    50% { opacity: 0.12; }
+    100% { opacity: 0.1; }
+  }
 }
 
 @layer base {
@@ -30,6 +39,20 @@
       linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
       linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
     background-size: 100% 4px, 3px 100%;
+    animation: crt-flicker 0.15s infinite;
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: "";
+    @apply fixed top-0 left-0 right-0 h-[10vh] pointer-events-none z-[998] opacity-[0.03];
+    background: linear-gradient(to bottom, transparent, var(--color-accent), transparent);
+    animation: scanline 8s linear infinite;
+  }
+  
+  @keyframes scanline {
+    0% { transform: translateY(-100vh); }
+    100% { transform: translateY(100vh); }
   }
 }
 
@@ -42,27 +65,66 @@
       linear-gradient(rgba(10, 10, 10, 0.8), rgba(10, 10, 10, 0.8)),
       url('/bg.png');
     background-size: 50px 50px, 50px 50px, cover, cover;
+    animation: drift 20s linear infinite;
   }
 
   .terminal {
-    @apply bg-panel border border-gray-800 rounded-lg overflow-hidden shadow-2xl;
+    @apply bg-panel border border-gray-800 rounded-lg overflow-hidden shadow-2xl relative transition-colors duration-500 hover:border-accent/50;
+  }
+
+  .terminal::before {
+    content: '';
+    @apply absolute inset-0 bg-accent/0 pointer-events-none transition-colors duration-500 z-10;
+  }
+
+  .terminal:hover::before {
+    @apply bg-accent/[0.02];
+    box-shadow: inset 0 0 20px rgba(16,185,129,0.1);
   }
 
   .terminal-header {
-    @apply bg-terminal-header px-4 py-3 flex items-center gap-2 border-b border-gray-800;
+    @apply bg-terminal-header px-4 py-3 flex items-center gap-2 border-b border-gray-800 relative z-20;
   }
 
   .terminal-body {
-    @apply p-6 font-mono text-[0.95rem];
+    @apply p-6 font-mono text-[0.95rem] relative z-20;
   }
 
   .card {
-    @apply bg-panel border border-gray-800 p-6 rounded transition-all duration-300 hover:border-accent hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(16,185,129,0.2)];
+    @apply bg-panel border border-gray-800 p-6 rounded transition-all duration-300 hover:border-accent hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(16,185,129,0.15)] relative overflow-hidden;
+  }
+
+  /* Card sweep effect on hover */
+  .card::after {
+    content: '';
+    @apply absolute top-0 left-[-100%] w-1/2 h-full bg-gradient-to-r from-transparent via-accent/10 to-transparent skew-x-12 transition-all duration-700 ease-out z-0;
+  }
+  
+  .card:hover::after {
+    left: 200%;
+  }
+
+  .card > * {
+    @apply relative z-10;
   }
 
   .tag {
-    @apply font-mono text-[0.7rem] bg-accent/10 text-accent px-2 py-1 rounded;
+    @apply font-mono text-[0.7rem] bg-accent/10 text-accent px-2 py-1 rounded border border-accent/20 transition-all hover:bg-accent hover:text-obsidian cursor-default;
   }
+
+  /* Reveal animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 100ms; }
+  .reveal-delay-2 { transition-delay: 200ms; }
+  .reveal-delay-3 { transition-delay: 300ms; }
 }
 
 /* Custom animation utility for v4 */
