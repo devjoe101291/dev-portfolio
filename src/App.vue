@@ -53,6 +53,7 @@ const handleLogoHover = (isHover: boolean) => {
 
       <!-- Desktop Menu -->
       <div class="hidden md:flex gap-8">
+        <a href="#about" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">about/</a>
         <a href="#services" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
         <a href="#projects" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
         <a href="#skills" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
@@ -62,6 +63,7 @@ const handleLogoHover = (isHover: boolean) => {
 
     <!-- Mobile Menu Dropdown -->
     <div v-show="isMobileMenuOpen" class="md:hidden absolute top-full left-0 w-full bg-obsidian/95 backdrop-blur-md border-b border-gray-800 py-4 px-4 flex flex-col gap-4 shadow-xl">
+      <a href="#about" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">about/</a>
       <a href="#services" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
       <a href="#projects" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
       <a href="#skills" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
@@ -114,6 +116,44 @@ const handleLogoHover = (isHover: boolean) => {
       <p class="text-lg md:text-xl text-gray-400 max-w-[600px] mb-8">
         Expert in Laravel, PHP, and Vue.js, delivering high-performance web and mobile applications with focus on API integrity.
       </p>
+    </section>
+    
+    <!-- About Section -->
+    <section id="about" class="mt-12 md:mt-16 pt-16 md:pt-20">
+      <h2 class="font-mono text-2xl mb-8"><span class="text-gray-600">#</span> profile_summary</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div class="card p-8 border-l-4 border-l-accent">
+          <p class="text-gray-300 leading-relaxed mb-6">
+            I am a results-driven <span class="text-accent">Full-stack Developer</span> with a deep specialization in the PHP ecosystem. With years of experience architecting complex systems, I've mastered the art of balancing robust backend logic with fluid, responsive user interfaces.
+          </p>
+          <p class="text-gray-300 leading-relaxed">
+            My philosophy is simple: write clean, maintainable code that solves real-world problems. Whether it's a high-performance ERP system in <span class="text-accent">Laravel</span> or a cross-platform mobile app in <span class="text-accent">React Native</span>, I focus on scalability and security at every layer of the stack.
+          </p>
+        </div>
+        <div class="space-y-6">
+          <div class="flex items-start gap-4">
+            <div class="text-accent font-mono text-xl mt-1">></div>
+            <div>
+              <h4 class="font-bold text-gray-200">Backend Mastery</h4>
+              <p class="text-sm text-gray-400">Expertise in Laravel, CodeIgniter, and custom PHP solutions with a focus on RESTful APIs and database optimization.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="text-accent font-mono text-xl mt-1">></div>
+            <div>
+              <h4 class="font-bold text-gray-200">Modern Frontend</h4>
+              <p class="text-sm text-gray-400">Building dynamic interfaces with Vue.js, React, and Tailwind CSS, ensuring pixel-perfect responsiveness.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="text-accent font-mono text-xl mt-1">></div>
+            <div>
+              <h4 class="font-bold text-gray-200">Mobile & CMS</h4>
+              <p class="text-sm text-gray-400">Developing high-quality mobile apps with React Native and custom WordPress architectures for high-traffic sites.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Services -->
