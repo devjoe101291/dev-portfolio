@@ -73,22 +73,62 @@ const loadScript = (src: string) => {
   })
 }
 
+const runPHP = async (source: string) => {
+  // Strategy 1: CodeX API
+  try {
+    const response = await fetch('https://api.codex.jaagrav.in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: source, language: 'php', input: '' })
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.output) return data.output
+    }
+  } catch (e) { console.warn('CodeX failed, trying Wandbox...') }
+
+  // Strategy 2: Wandbox API
+  try {
+    const response = await fetch('https://wandbox.org/api/compile.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: source, compiler: 'php-8.2.0', save: false })
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.program_output) return data.program_output
+    }
+  } catch (e) { console.warn('Wandbox failed, trying Piston mirror...') }
+
+  // Strategy 3: Piston Mirror
+  try {
+    const response = await fetch('https://piston.deno.dev/api/v2/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: 'php', version: '*', files: [{ name: 'main.php', content: source }] })
+    })
+    if (response.ok) {
+      const data = await response.json()
+      if (data.run && data.run.output) return data.run.output
+    }
+  } catch (e) { console.warn('Piston mirror failed.') }
+
+  throw new Error('All execution engines are currently busy. Please try again in a moment.')
+}
+
 const runCode = async () => {
   isRunning.value = true
-  output.value = ''
+  output.value = '> Initializing environment...\n'
   
   try {
     if (selectedLang.value.value === 'javascript') {
-      output.value = '> Executing JS locally...\n'
       const logs: string[] = []
       const originalLog = console.log
       console.log = (...args) => logs.push(args.join(' '))
       try {
         new Function(code.value)()
         output.value = logs.join('\n') || '> Execution completed.'
-      } catch (e) {
-        output.value = `Error: ${e}`
-      }
+      } catch (e) { output.value = `Error: ${e}` }
       console.log = originalLog
     } 
     
@@ -101,33 +141,16 @@ const runCode = async () => {
       await loadScript('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js')
       const pyodide = await (window as any).loadPyodide()
       output.value = ''
-      pyodide.setStdout({
-        batched: (text: string) => { output.value += text + '\n' }
-      })
+      pyodide.setStdout({ batched: (text: string) => { output.value += text + '\n' } })
       await pyodide.runPythonAsync(code.value)
     }
 
     else if (selectedLang.value.value === 'php') {
-      output.value = '> Executing PHP via Piston API...\n'
-      // Switching to a more reliable Piston instance with fallback
-      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: 'php',
-          version: '8.2.3',
-          files: [{ name: 'main.php', content: code.value }]
-        })
-      })
-      const data = await response.json()
-      if (data.run) {
-        output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> PHP Execution completed.')
-      } else {
-        output.value = `> API Error: ${data.message || 'Unknown error'}`
-      }
+      output.value = '> Routing request through multi-engine bridge...\n'
+      output.value = await runPHP(code.value)
     }
   } catch (error) {
-    output.value = `> System Error: ${error}\n\nPlease try again or switch language.`
+    output.value = `> Execution Error: ${error}\n\nNote: Third-party engines are restricted. Try refreshing or using JS/Python.`
   } finally {
     isRunning.value = false
   }
@@ -139,36 +162,16 @@ const renderPreview = () => {
   if (!doc) return
 
   let content = ''
-  
   if (selectedLang.value.value === 'html') {
     content = code.value
   } else if (selectedLang.value.value === 'vue') {
-    content = `
-      <script src="https://unpkg.com/vue@3/dist/vue.global.js"><\/script>
-      ${code.value}
-    `
+    content = `<script src="https://unpkg.com/vue@3/dist/vue.global.js"><\/script>${code.value}`
   } else if (selectedLang.value.value === 'react') {
-    content = `
-      <div id="root"></div>
-      <script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
-      <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
-      <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
-      <script type="text/babel">${code.value}<\/script>
-    `
+    content = `<div id="root"></div><script src="https://unpkg.com/react@18/umd/react.development.js"><\/script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script><script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script><script type="text/babel">${code.value}<\/script>`
   }
 
   doc.open()
-  doc.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; line-height: 1.6; }
-      </style>
-    </head>
-    <body>${content}</body>
-    </html>
-  `)
+  doc.write(`<!DOCTYPE html><html><head><style>body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; line-height: 1.6; }</style></head><body>${content}</body></html>`)
   doc.close()
 }
 
@@ -238,10 +241,10 @@ onMounted(() => {
          </span>
          <span class="text-[0.6rem] text-gray-500 font-mono flex items-center gap-1">
            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'EXTERNAL_API') }}
+           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'SMART_BRIDGE') }}
          </span>
        </div>
-       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.0</div>
+       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.1</div>
     </div>
   </div>
 </template>
