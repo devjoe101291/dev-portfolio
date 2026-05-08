@@ -4,8 +4,47 @@ import { ref, watch, onMounted, nextTick } from 'vue'
 const languages = [
   { name: 'JavaScript', value: 'javascript', starter: 'console.log("Hello from JS!");\nconst sum = 1 + 2;\nconsole.log(`1 + 2 = ${sum}`);' },
   { name: 'HTML/CSS', value: 'html', starter: '<h1 style="color: #27c93f;">Hello World</h1>\n<p>Try changing this text!</p>\n<button onclick="alert(\'Hi!\')">Click Me</button>' },
+  { name: 'Vue 3', value: 'vue', starter: `<div id="app">
+  <h1 class="text-accent">{{ message }}</h1>
+  <button @click="count++" class="btn">Count is: {{ count }}</button>
+</div>
+
+<script>
+  const { createApp, ref } = Vue
+  createApp({
+    setup() {
+      const message = ref('Hello from Vue 3!')
+      const count = ref(0)
+      return { message, count }
+    }
+  }).mount('#app')
+<\/script>
+
+<style>
+  .text-accent { color: #27c93f; font-family: sans-serif; }
+  .btn { background: #333; color: white; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+  .btn:hover { background: #444; }
+</style>` },
+  { name: 'React', value: 'react', starter: `function App() {
+  const [count, setCount] = React.useState(0);
+  return (
+    <div style={{ fontFamily: 'sans-serif', color: '#c9d1d9' }}>
+      <h1 style={{ color: '#61dafb' }}>Hello from React!</h1>
+      <p>Interactive counter in the browser:</p>
+      <button 
+        onClick={() => setCount(count + 1)}
+        style={{ padding: '10px 20px', background: '#61dafb', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+      >
+        Count is {count}
+      </button>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);` },
   { name: 'Python', value: 'python', starter: 'print("Hello from Python WASM!")\nsum_val = 1 + 2\nprint(f"1 + 2 = {sum_val}")\nimport math\nprint(f"Pi is {math.pi}")' },
-  { name: 'PHP', value: 'php', starter: '<?php\n\necho "Hello from PHP WASM!\\n";\n$sum = 1 + 2;\necho "1 + 2 = " . $sum . "\\n";\n\n$arr = ["WebAssembly", "PHP", "Vue"];\nforeach($arr as $item) {\n    echo "Supported: " . $item . "\\n";\n}' }
+  { name: 'PHP', value: 'php', starter: '<?php\n\necho "Hello from PHP!\\n";\n$sum = 1 + 2;\necho "1 + 2 = " . $sum . "\\n";\n\n$arr = ["WebAssembly", "PHP", "Vue"];\nforeach($arr as $item) {\n    echo "Supported: " . $item . "\\n";\n}' }
 ]
 
 const selectedLang = ref(languages[0])
@@ -17,9 +56,9 @@ const iframeRef = ref<HTMLIFrameElement | null>(null)
 watch(selectedLang, async (newVal) => {
   code.value = newVal.starter
   output.value = ''
-  if (newVal.value === 'html') {
+  if (['html', 'vue', 'react'].includes(newVal.value)) {
     await nextTick()
-    renderHTML()
+    renderPreview()
   }
 })
 
@@ -53,8 +92,8 @@ const runCode = async () => {
       console.log = originalLog
     } 
     
-    else if (selectedLang.value.value === 'html') {
-      renderHTML()
+    else if (['html', 'vue', 'react'].includes(selectedLang.value.value)) {
+      renderPreview()
     }
 
     else if (selectedLang.value.value === 'python') {
@@ -69,63 +108,76 @@ const runCode = async () => {
     }
 
     else if (selectedLang.value.value === 'php') {
-      output.value = '> Loading PHP runtime (WebAssembly)...\n'
-      // Using the wandbox API as it has excellent CORS support and stability
-      const response = await fetch('https://wandbox.org/api/compile.json', {
+      output.value = '> Executing PHP via Piston API...\n'
+      // Switching to a more reliable Piston instance with fallback
+      const response = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: code.value,
-          compiler: 'php-8.2.0',
-          save: false
+          language: 'php',
+          version: '8.2.3',
+          files: [{ name: 'main.php', content: code.value }]
         })
       })
       const data = await response.json()
-      if (data.program_output) output.value = data.program_output
-      else if (data.compiler_error) output.value = `Error:\n${data.compiler_error}`
-      else output.value = '> PHP Execution completed.'
+      if (data.run) {
+        output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> PHP Execution completed.')
+      } else {
+        output.value = `> API Error: ${data.message || 'Unknown error'}`
+      }
     }
   } catch (error) {
-    output.value = `> System Error: ${error}\n\nNote: This might be a temporary network issue or CORS restriction. Try another language or refresh the page.`
+    output.value = `> System Error: ${error}\n\nPlease try again or switch language.`
   } finally {
     isRunning.value = false
   }
 }
 
-const renderHTML = () => {
-  if (iframeRef.value) {
-    const doc = iframeRef.value.contentDocument
-    if (doc) {
-      doc.open()
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body { 
-              background: #0d1117; 
-              color: #c9d1d9; 
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-              padding: 20px;
-              line-height: 1.6;
-            }
-            button { background: #238636; color: white; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; }
-          </style>
-        </head>
-        <body>${code.value}</body>
-        </html>
-      `)
-      doc.close()
-    }
+const renderPreview = () => {
+  if (!iframeRef.value) return
+  const doc = iframeRef.value.contentDocument
+  if (!doc) return
+
+  let content = ''
+  
+  if (selectedLang.value.value === 'html') {
+    content = code.value
+  } else if (selectedLang.value.value === 'vue') {
+    content = `
+      <script src="https://unpkg.com/vue@3/dist/vue.global.js"><\/script>
+      ${code.value}
+    `
+  } else if (selectedLang.value.value === 'react') {
+    content = `
+      <div id="root"></div>
+      <script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+      <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+      <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+      <script type="text/babel">${code.value}<\/script>
+    `
   }
+
+  doc.open()
+  doc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; line-height: 1.6; }
+      </style>
+    </head>
+    <body>${content}</body>
+    </html>
+  `)
+  doc.close()
 }
 
 watch(code, () => {
-  if (selectedLang.value.value === 'html') renderHTML()
+  if (['html', 'vue', 'react'].includes(selectedLang.value.value)) renderPreview()
 })
 
 onMounted(() => {
-  if (selectedLang.value.value === 'html') setTimeout(renderHTML, 500)
+  if (['html', 'vue', 'react'].includes(selectedLang.value.value)) setTimeout(renderPreview, 500)
 })
 </script>
 
@@ -149,7 +201,7 @@ onMounted(() => {
         </div>
         
         <button 
-          v-if="selectedLang.value !== 'html'"
+          v-if="!['html', 'vue', 'react'].includes(selectedLang.value)"
           @click="runCode" :disabled="isRunning"
           class="bg-accent text-obsidian font-mono font-bold text-[0.7rem] px-4 py-1 rounded transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-lg"
         >
@@ -169,10 +221,10 @@ onMounted(() => {
 
       <div class="flex-1 bg-black/10 relative flex flex-col">
         <div class="absolute top-2 left-4 text-[0.6rem] text-gray-600 font-mono z-10 pointer-events-none uppercase">
-          {{ selectedLang.value === 'html' ? 'Live_Render' : 'System_Output' }}
+          {{ ['html', 'vue', 'react'].includes(selectedLang.value) ? 'Live_Render' : 'System_Output' }}
         </div>
-        <div v-show="selectedLang.value === 'html'" class="flex-1 pt-8"><iframe ref="iframeRef" class="w-full h-full border-none"></iframe></div>
-        <div v-show="selectedLang.value !== 'html'" class="flex-1 p-8 pt-10 font-mono text-sm overflow-y-auto custom-scrollbar">
+        <div v-show="['html', 'vue', 'react'].includes(selectedLang.value)" class="flex-1 pt-8"><iframe ref="iframeRef" class="w-full h-full border-none"></iframe></div>
+        <div v-show="!['html', 'vue', 'react'].includes(selectedLang.value)" class="flex-1 p-8 pt-10 font-mono text-sm overflow-y-auto custom-scrollbar">
           <pre class="text-gray-400 whitespace-pre-wrap">{{ output || '> Ready for execution...' }}</pre>
         </div>
       </div>
@@ -186,10 +238,10 @@ onMounted(() => {
          </span>
          <span class="text-[0.6rem] text-gray-500 font-mono flex items-center gap-1">
            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-           RUNTIME: {{ selectedLang.value === 'php' ? 'WANDBOX_API' : 'BROWSER_WASM' }}
+           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'EXTERNAL_API') }}
          </span>
        </div>
-       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v2.3</div>
+       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.0</div>
     </div>
   </div>
 </template>
