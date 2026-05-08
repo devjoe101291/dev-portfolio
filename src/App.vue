@@ -4,6 +4,7 @@ import MusicPlayer from './components/MusicPlayer.vue'
 import SnakeGame from './components/SnakeGame.vue'
 import SpaceImpact from './components/SpaceImpact.vue'
 import VirtualDrums from './components/VirtualDrums.vue'
+import CodeCompiler from './components/CodeCompiler.vue'
 
 const typingCommand = ref('cat welcome.txt')
 const activeGame = ref('snake')
@@ -296,14 +297,16 @@ const handleLogoHover = (isHover: boolean) => {
     <section id="playground" class="mt-20 md:mt-32 pt-16 md:pt-20">
       <h2 class="font-mono text-2xl mb-8"><span class="text-gray-600">#</span> interactive_demo</h2>
       
-      <div class="flex justify-center gap-4 mb-8">
+      <div class="flex flex-wrap justify-center gap-4 mb-8">
         <button @click="activeGame = 'snake'" :class="activeGame === 'snake' ? 'text-obsidian bg-accent' : 'text-accent border border-accent/50 hover:bg-accent/10'" class="px-6 py-2 font-mono text-sm transition-colors rounded">snake.exe</button>
         <button @click="activeGame = 'space'" :class="activeGame === 'space' ? 'text-obsidian bg-accent' : 'text-accent border border-accent/50 hover:bg-accent/10'" class="px-6 py-2 font-mono text-sm transition-colors rounded">space_impact.exe</button>
+        <button @click="activeGame = 'compiler'" :class="activeGame === 'compiler' ? 'text-obsidian bg-accent' : 'text-accent border border-accent/50 hover:bg-accent/10'" class="px-6 py-2 font-mono text-sm transition-colors rounded">code_compiler.sh</button>
       </div>
 
       <div class="flex justify-center">
         <SnakeGame v-if="activeGame === 'snake'" class="w-full max-w-[600px]" />
         <SpaceImpact v-if="activeGame === 'space'" class="w-full max-w-[600px]" />
+        <CodeCompiler v-if="activeGame === 'compiler'" class="w-full max-w-[800px]" />
       </div>
     </section>
 
