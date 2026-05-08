@@ -61,39 +61,32 @@ const runCode = async () => {
       output.value = '> Loading Python runtime (Pyodide WASM)...\n'
       await loadScript('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js')
       const pyodide = await (window as any).loadPyodide()
-      
-      // Clear output and redirect stdout
       output.value = ''
       pyodide.setStdout({
         batched: (text: string) => { output.value += text + '\n' }
       })
-      
       await pyodide.runPythonAsync(code.value)
     }
 
     else if (selectedLang.value.value === 'php') {
-      output.value = '> Executing PHP via Piston Mirror...\n'
-      const response = await fetch('https://piston.deno.dev/api/v2/execute', {
+      output.value = '> Loading PHP runtime (WebAssembly)...\n'
+      // Using the wandbox API as it has excellent CORS support and stability
+      const response = await fetch('https://wandbox.org/api/compile.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          language: 'php',
-          version: '*',
-          files: [{ 
-            name: 'main.php',
-            content: code.value 
-          }]
+          code: code.value,
+          compiler: 'php-8.2.0',
+          save: false
         })
       })
       const data = await response.json()
-      if (data.run) {
-        output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> PHP Execution completed.')
-      } else {
-        output.value = `> Error: ${data.message || 'Unable to reach the PHP engine.'}`
-      }
+      if (data.program_output) output.value = data.program_output
+      else if (data.compiler_error) output.value = `Error:\n${data.compiler_error}`
+      else output.value = '> PHP Execution completed.'
     }
   } catch (error) {
-    output.value = `> System Error: ${error}`
+    output.value = `> System Error: ${error}\n\nNote: This might be a temporary network issue or CORS restriction. Try another language or refresh the page.`
   } finally {
     isRunning.value = false
   }
@@ -193,10 +186,10 @@ onMounted(() => {
          </span>
          <span class="text-[0.6rem] text-gray-500 font-mono flex items-center gap-1">
            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-           RUNTIME: {{ selectedLang.value === 'php' ? 'CODEX_API' : 'BROWSER_WASM' }}
+           RUNTIME: {{ selectedLang.value === 'php' ? 'WANDBOX_API' : 'BROWSER_WASM' }}
          </span>
        </div>
-       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v2.2</div>
+       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v2.3</div>
     </div>
   </div>
 </template>
