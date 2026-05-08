@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import MusicPlayer from './components/MusicPlayer.vue'
 import SnakeGame from './components/SnakeGame.vue'
 import SpaceImpact from './components/SpaceImpact.vue'
-import BandDemo from './components/BandDemo.vue'
+import VirtualDrums from './components/VirtualDrums.vue'
 
 const typingCommand = ref('cat welcome.txt')
 const activeGame = ref('snake')
@@ -266,31 +266,28 @@ const handleLogoHover = (isHover: boolean) => {
       
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <h3 class="text-2xl font-bold mb-4">The One-Man Band</h3>
+          <h3 class="text-2xl font-bold mb-4">The Rhythm Section</h3>
           <p class="text-gray-400 leading-relaxed mb-6">
-            When I'm not writing code or architecting backend systems, you'll find me laying down tracks in the studio. I am a multi-instrumentalist capable of playing every instrument in a full band setup.
+            When I'm not writing code or architecting backend systems, you'll find me behind the drum kit. I am a passionate drummer, providing the heartbeat and groove for my band.
           </p>
           <div class="space-y-4 font-mono text-sm">
             <div class="flex items-center gap-3 text-gray-300">
-              <span class="text-accent">></span> Drums & Percussion (The Backbone)
+              <span class="text-[#ff5f56]">></span> Precision Timing (The Metronome)
             </div>
             <div class="flex items-center gap-3 text-gray-300">
-              <span class="text-[#ff5f56]">></span> Bass Guitar (The Groove)
+              <span class="text-accent">></span> Dynamic Control (The Feel)
             </div>
             <div class="flex items-center gap-3 text-gray-300">
-              <span class="text-[#ffbd2e]">></span> Rhythm & Lead Guitar (The Melody)
-            </div>
-            <div class="flex items-center gap-3 text-gray-300">
-              <span class="text-[#27c93f]">></span> Keyboards & Synths (The Atmosphere)
+              <span class="text-[#ffbd2e]">></span> Complex Polyrhythms (The Logic)
             </div>
           </div>
           <p class="text-gray-500 mt-6 text-sm italic">
-            "Just like in full-stack development, playing every instrument requires understanding how each part fits together to create a cohesive final product."
+            "Just like in full-stack development, playing the drums requires maintaining a solid foundation while knowing exactly when to add complex fills and transitions."
           </p>
         </div>
         
         <div class="w-full">
-          <BandDemo />
+          <VirtualDrums />
         </div>
       </div>
     </section>
