@@ -5,7 +5,7 @@ const languages = [
   { name: 'PHP', value: 'php', version: '8.2.3', starter: '<?php\n\necho "Hello from PHP!\\n";\n$sum = 1 + 2;\necho "1 + 2 = " . $sum . "\\n";' },
   { name: 'JavaScript', value: 'javascript', version: '18.15.0', starter: 'console.log("Hello from JS!");\nconst sum = 1 + 2;\nconsole.log(`1 + 2 = ${sum}`);' },
   { name: 'Python', value: 'python', version: '3.10.0', starter: 'print("Hello from Python!")\nsum_val = 1 + 2\nprint(f"1 + 2 = {sum_val}")' },
-  { name: 'C++', value: 'cpp', version: '10.2.0', starter: '#include <iostream>\n\nint main() {\n    std::cout << "Hello from C++!" << std::endl;\n    return 0;\n}' }
+  { name: 'C++', value: 'c++', version: '10.2.0', starter: '#include <iostream>\n\nint main() {\n    std::cout << "Hello from C++!" << std::endl;\n    return 0;\n}' }
 ]
 
 const selectedLang = ref(languages[0])
@@ -29,7 +29,10 @@ const runCode = async () => {
       body: JSON.stringify({
         language: selectedLang.value.value,
         version: selectedLang.value.version,
-        files: [{ content: code.value }]
+        files: [{ 
+          name: 'main',
+          content: code.value 
+        }]
       })
     })
 
@@ -38,7 +41,7 @@ const runCode = async () => {
     if (data.run) {
       output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> Execution completed with no output.')
     } else {
-      output.value = '> Error: Unable to reach the execution engine.'
+      output.value = `> Error: ${data.message || 'Unable to reach the execution engine.'}`
     }
   } catch (error) {
     output.value = `> Network Error: ${error}`
