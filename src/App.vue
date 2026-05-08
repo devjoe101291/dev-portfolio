@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import MusicPlayer from './components/MusicPlayer.vue'
 import SnakeGame from './components/SnakeGame.vue'
 import SpaceImpact from './components/SpaceImpact.vue'
+import BandDemo from './components/BandDemo.vue'
 
 const typingCommand = ref('cat welcome.txt')
 const activeGame = ref('snake')
@@ -62,6 +63,7 @@ const handleLogoHover = (isHover: boolean) => {
         <a href="#services" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
         <a href="#projects" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
         <a href="#skills" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
+        <a href="#hobbies" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">hobbies/</a>
         <a href="#playground" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">playground/</a>
         <a href="#contact" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">contact/</a>
       </div>
@@ -73,6 +75,7 @@ const handleLogoHover = (isHover: boolean) => {
       <a href="#services" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
       <a href="#projects" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
       <a href="#skills" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
+      <a href="#hobbies" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">hobbies/</a>
       <a href="#playground" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">playground/</a>
       <a href="#contact" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">contact/</a>
     </div>
@@ -253,6 +256,41 @@ const handleLogoHover = (isHover: boolean) => {
   }
 }
 </pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hobbies -->
+    <section id="hobbies" class="mt-20 md:mt-32 pt-16 md:pt-20">
+      <h2 class="font-mono text-2xl mb-8"><span class="text-gray-600">#</span> off_screen_processes</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">The One-Man Band</h3>
+          <p class="text-gray-400 leading-relaxed mb-6">
+            When I'm not writing code or architecting backend systems, you'll find me laying down tracks in the studio. I am a multi-instrumentalist capable of playing every instrument in a full band setup.
+          </p>
+          <div class="space-y-4 font-mono text-sm">
+            <div class="flex items-center gap-3 text-gray-300">
+              <span class="text-accent">></span> Drums & Percussion (The Backbone)
+            </div>
+            <div class="flex items-center gap-3 text-gray-300">
+              <span class="text-[#ff5f56]">></span> Bass Guitar (The Groove)
+            </div>
+            <div class="flex items-center gap-3 text-gray-300">
+              <span class="text-[#ffbd2e]">></span> Rhythm & Lead Guitar (The Melody)
+            </div>
+            <div class="flex items-center gap-3 text-gray-300">
+              <span class="text-[#27c93f]">></span> Keyboards & Synths (The Atmosphere)
+            </div>
+          </div>
+          <p class="text-gray-500 mt-6 text-sm italic">
+            "Just like in full-stack development, playing every instrument requires understanding how each part fits together to create a cohesive final product."
+          </p>
+        </div>
+        
+        <div class="w-full">
+          <BandDemo />
         </div>
       </div>
     </section>
