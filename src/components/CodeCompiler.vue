@@ -6,14 +6,17 @@ const languages = [
   { name: 'HTML/CSS', value: 'html', starter: '<h1 style="color: #27c93f;">Hello World</h1>\n<p>Try changing this text!</p>\n<button onclick="alert(\'Hi!\')">Click Me</button>' },
   { name: 'Vue 3', value: 'vue', starter: `<div id="app">\n  <h1 class="text-accent">{{ message }}</h1>\n  <button @click="count++" class="btn">Count is: {{ count }}</button>\n</div>\n\n<script>\n  const { createApp, ref } = Vue\n  createApp({\n    setup() {\n      const message = ref('Hello from Vue 3!')\n      const count = ref(0)\n      return { message, count }\n    }\n  }).mount('#app')\n<\/script>\n\n<style>\n  .text-accent { color: #27c93f; font-family: sans-serif; }\n  .btn { background: #333; color: white; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px; }\n  .btn:hover { background: #444; }\n</style>` },
   { name: 'React', value: 'react', starter: `function App() {\n  const [count, setCount] = React.useState(0);\n  return (\n    <div style={{ fontFamily: 'sans-serif', color: '#c9d1d9' }}>\n      <h1 style={{ color: '#61dafb' }}>Hello from React!</h1>\n      <p>Interactive counter in the browser:</p>\n      <button \n        onClick={() => setCount(count + 1)}\n        style={{ padding: '10px 20px', background: '#61dafb', border: 'none', borderRadius: '5px', cursor: 'pointer' }}\n      >\n        Count is {count}\n      </button>\n    </div>\n  );\n}\n\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(<App />);` },
+  { name: 'Laravel', value: 'laravel', starter: `<?php\n\n// Mocking Laravel Route Engine\nclass Route {\n    public static function get($uri, $callback) {\n        echo "Laravel [v10.x] Route registered: GET $uri\\n";\n        if (is_callable($callback)) return $callback();\n    }\n}\n\n// Try defining a route:\nRoute::get('/api/user', function() {\n    $user = ['id' => 1, 'name' => 'Joey Ventulan', 'role' => 'Full-Stack Developer'];\n    return print_r($user, true);\n});` },
+  { name: 'CodeIgniter', value: 'codeigniter', starter: `<?php\n\n// Mocking CI4 Controller\nclass BaseController {\n    public function __construct() {\n        echo "CodeIgniter [v4.x] Kernel Initialized...\\n";\n    }\n}\n\nclass Home extends BaseController {\n    public function index() {\n        echo "Loading View: welcome_message.php\\n";\n        echo "Data: Hello from CodeIgniter Controller!";\n    }\n}\n\n$controller = new Home();\n$controller->index();` },
   { name: 'Python', value: 'python', starter: 'print("Hello from Python WASM!")\nsum_val = 1 + 2\nprint(f"1 + 2 = {sum_val}")\nimport math\nprint(f"Pi is {math.pi}")' },
-  { name: 'PHP', value: 'php', starter: '<?php\n\necho "Hello from PHP!\\n";\n$sum = 1 + 2;\necho "1 + 2 = " . $sum . "\\n";\n\n$arr = ["WebAssembly", "PHP", "Vue"];\nforeach($arr as $item) {\n    echo "Supported: " . $item . "\\n";\n}' }
+  { name: 'PHP', value: 'php', starter: '<?php\n\necho "Hello from PHP!\\n";\n$sum = 1 + 2;\necho "1 + 2 = " . $sum . "\\n";' }
 ]
 
 const selectedLang = ref(languages[0])
 const code = ref(selectedLang.value.starter)
 const output = ref('')
 const isRunning = ref(false)
+const isFullScreen = ref(false)
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 
 watch(selectedLang, async (newVal) => {
@@ -37,26 +40,23 @@ const loadScript = (src: string) => {
 }
 
 const runPHP = async (source: string) => {
-  // FINAL FULL FIX: Use Judge0's official open demo instance with a more robust request
-  // This instance is highly reliable and CORS-permissive
   try {
     const response = await fetch('https://ce.judge0.com/submissions?wait=true', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         source_code: source,
-        language_id: 68, // PHP 8.2.0
+        language_id: 68,
         stdin: ""
       })
     })
     
     if (response.ok) {
       const data = await response.json()
-      return data.stdout || data.stderr || data.compile_output || '> Execution completed (no output).'
+      return data.stdout || data.stderr || data.compile_output || '> Execution completed.'
     }
   } catch (e) { console.warn('Judge0 failed, trying Piston mirror...') }
 
-  // Secondary Fallback: Piston Deno Mirror (Direct)
   try {
     const response = await fetch('https://piston.deno.dev/api/v2/execute', {
       method: 'POST',
@@ -71,7 +71,7 @@ const runPHP = async (source: string) => {
     if (data.run) return data.run.output || data.run.stderr || '> Execution completed.'
   } catch (e) { console.warn('Piston Mirror failed.') }
 
-  return '> System Error: All PHP engines are currently unreachable. Please check your internet connection.'
+  return '> System Error: Engines busy. Please try again.'
 }
 
 const runCode = async () => {
@@ -103,8 +103,8 @@ const runCode = async () => {
       await pyodide.runPythonAsync(code.value)
     }
 
-    else if (selectedLang.value.value === 'php') {
-      output.value = '> Executing PHP via Primary Engine...\n'
+    else if (['php', 'laravel', 'codeigniter'].includes(selectedLang.value.value)) {
+      output.value = `> Booting ${selectedLang.value.name} Mock Kernel...\n`
       output.value = await runPHP(code.value)
     }
   } catch (error) {
@@ -129,7 +129,7 @@ const renderPreview = () => {
   }
 
   doc.open()
-  doc.write(`<!DOCTYPE html><html><head><style>body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; padding: 20px; line-height: 1.6; }</style></head><body>${content}</body></html>`)
+  doc.write(`<!DOCTYPE html><html><head><style>body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; line-height: 1.6; }</style></head><body>${content}</body></html>`)
   doc.close()
 }
 
@@ -140,22 +140,35 @@ watch(code, () => {
 onMounted(() => {
   if (['html', 'vue', 'react'].includes(selectedLang.value.value)) setTimeout(renderPreview, 500)
 })
+
+const toggleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value
+  if (isFullScreen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
 </script>
 
 <template>
-  <div class="terminal overflow-hidden relative group h-[550px] flex flex-col border border-gray-800 rounded-lg shadow-2xl">
+  <div 
+    class="terminal overflow-hidden relative group flex flex-col border border-gray-800 rounded-lg shadow-2xl transition-all duration-300"
+    :class="isFullScreen ? 'fixed inset-4 z-[9999] bg-obsidian/95 backdrop-blur-md' : 'h-[550px]'"
+  >
+    <!-- CRT overlay -->
     <div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-gradient-to-b from-transparent via-accent to-transparent h-[100%] animate-scanline z-20"></div>
     
     <div class="terminal-header flex justify-between items-center px-4 py-2 bg-obsidian border-b border-gray-800">
       <div class="flex gap-2">
-        <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-        <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-        <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+        <button @click="toggleFullScreen" class="w-3 h-3 rounded-full bg-[#ff5f56] hover:brightness-110 shadow-sm" title="Toggle Fullscreen"></button>
+        <div class="w-3 h-3 rounded-full bg-[#ffbd2e] shadow-sm"></div>
+        <div class="w-3 h-3 rounded-full bg-[#27c93f] shadow-sm"></div>
       </div>
       
       <div class="flex items-center gap-3">
         <div class="flex items-center bg-black/40 rounded px-2 py-1 border border-gray-700">
-          <span class="text-[0.65rem] text-gray-500 font-mono mr-2">LANG:</span>
+          <span class="text-[0.65rem] text-gray-500 font-mono mr-2">ENVIRONMENT:</span>
           <select v-model="selectedLang" class="bg-transparent text-accent font-mono text-[0.7rem] focus:outline-none cursor-pointer">
             <option v-for="lang in languages" :key="lang.value" :value="lang">{{ lang.name.toUpperCase() }}</option>
           </select>
@@ -168,25 +181,27 @@ onMounted(() => {
         >
           <svg v-if="!isRunning" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M4.5 3L15.5 10L4.5 17V3Z"/></svg>
           <svg v-else class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          {{ isRunning ? 'EXECUTING...' : 'RUN' }}
+          {{ isRunning ? 'BOOTING...' : 'RUN' }}
         </button>
         <div v-else class="text-[0.65rem] text-accent/60 font-mono italic animate-pulse">Live Preview Active</div>
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col md:flex-row">
+    <div class="flex-1 flex flex-col md:flex-row min-h-0">
+      <!-- Editor Area -->
       <div class="flex-1 relative border-b md:border-b-0 md:border-r border-gray-800 bg-[#1e1e1e]/50">
-        <div class="absolute top-2 left-4 text-[0.6rem] text-gray-600 font-mono z-10 pointer-events-none uppercase">Source_Code</div>
+        <div class="absolute top-2 left-4 text-[0.6rem] text-gray-600 font-mono z-10 pointer-events-none uppercase">SOURCE_{{ selectedLang.value }}</div>
         <textarea v-model="code" spellcheck="false" class="w-full h-full bg-transparent text-gray-300 font-mono text-sm p-8 pt-10 resize-none focus:outline-none selection:bg-accent/30 custom-scrollbar leading-relaxed"></textarea>
       </div>
 
+      <!-- Console Area -->
       <div class="flex-1 bg-black/10 relative flex flex-col">
         <div class="absolute top-2 left-4 text-[0.6rem] text-gray-600 font-mono z-10 pointer-events-none uppercase">
           {{ ['html', 'vue', 'react'].includes(selectedLang.value) ? 'Live_Render' : 'System_Output' }}
         </div>
         <div v-show="['html', 'vue', 'react'].includes(selectedLang.value)" class="flex-1 pt-8"><iframe ref="iframeRef" class="w-full h-full border-none"></iframe></div>
         <div v-show="!['html', 'vue', 'react'].includes(selectedLang.value)" class="flex-1 p-8 pt-10 font-mono text-sm overflow-y-auto custom-scrollbar">
-          <pre class="text-gray-400 whitespace-pre-wrap">{{ output || '> Ready for execution...' }}</pre>
+          <pre class="text-gray-400 whitespace-pre-wrap">{{ output || '> System ready. Waiting for instructions...' }}</pre>
         </div>
       </div>
     </div>
@@ -199,10 +214,15 @@ onMounted(() => {
          </span>
          <span class="text-[0.6rem] text-gray-500 font-mono flex items-center gap-1">
            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'JUDGE0_CORE') }}
+           RUNTIME: {{ selectedLang.value === 'python' ? 'PY_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'WEB_DOM' : 'PHP_CORE') }}
          </span>
        </div>
-       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.3</div>
+       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest hidden md:block">
+         {{ isFullScreen ? 'Maximize Mode Enabled' : 'Normal View' }} // Joey_Ventulan // Dev_Lab v4.0
+       </div>
+       <button @click="toggleFullScreen" class="text-[0.6rem] text-accent font-mono hover:underline uppercase">
+         {{ isFullScreen ? '[ Exit Full View ]' : '[ Full View ]' }}
+       </button>
     </div>
   </div>
 </template>
