@@ -8,19 +8,19 @@ const currentTrack = ref(0)
 
 const tracks = [
   {
-    title: 'Night Coding',
-    artist: 'Lofi Beats',
-    url: 'https://github.com/AnujPancholi/lofi-music/raw/master/music/1.mp3'
+    title: 'Lofi Radio (Live)',
+    artist: 'Programmer Vibes',
+    url: 'https://stream.zeno.fm/0r0xa792kwzuv'
+  },
+  {
+    title: 'Chill Focus',
+    artist: 'Ambient Tech',
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3'
   },
   {
     title: 'Terminal Flow',
     artist: 'Synthwave',
-    url: 'https://github.com/AnujPancholi/lofi-music/raw/master/music/2.mp3'
-  },
-  {
-    title: 'Deep Focus',
-    artist: 'Ambient',
-    url: 'https://github.com/AnujPancholi/lofi-music/raw/master/music/3.mp3'
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
   }
 ]
 
