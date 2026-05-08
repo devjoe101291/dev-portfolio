@@ -22,7 +22,6 @@ const runCode = async () => {
   isRunning.value = true
   output.value = '> Initializing environment...\n'
   
-  // Mapping for CodeX API
   const langMap: Record<string, string> = {
     'php': 'php',
     'javascript': 'js',
@@ -42,27 +41,30 @@ const runCode = async () => {
     })
 
     const data = await response.json()
+    console.log('CodeX Response:', data)
     
-    if (data.output) {
+    if (data.output !== undefined && data.output !== null && data.output !== '') {
       output.value = data.output
     } else if (data.error) {
       output.value = `Error:\n${data.error}`
+    } else if (data.message) {
+      output.value = `Message:\n${data.message}`
     } else {
-      output.value = '> Execution completed with no output.'
+      output.value = '> Execution completed with no output.\n' + JSON.stringify(data)
     }
   } catch (error) {
-    output.value = `> Network Error: ${error}\nTrying fallback...`
-    // Fallback for JS
+    output.value = `> Network Error: ${error}\nTrying local fallback...`
     if (selectedLang.value.value === 'javascript') {
       try {
         const logs: string[] = []
         const originalLog = console.log
         console.log = (...args) => logs.push(args.join(' '))
-        eval(code.value)
+        // Use Function constructor instead of eval for better reliability
+        new Function(code.value)()
         console.log = originalLog
         output.value = logs.join('\n') || '> JS Execution completed.'
       } catch (e) {
-        output.value = `JS Error: ${e}`
+        output.value = `JS Local Error: ${e}`
       }
     }
   } finally {
