@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import MusicPlayer from './components/MusicPlayer.vue'
 
 const typingCommand = ref('cat welcome.txt')
 const currentCommand = ref('')
@@ -29,6 +30,7 @@ const handleLogoHover = (isHover: boolean) => {
 
 <template>
   <div class="bg-grid"></div>
+  <MusicPlayer />
 
   <nav class="fixed top-0 w-full py-4 md:py-6 z-50 bg-obsidian/80 backdrop-blur-md border-b border-gray-800">
     <div class="max-w-[1100px] mx-auto px-4 md:px-8 flex justify-between items-center relative">
