@@ -72,20 +72,25 @@ const runCode = async () => {
     }
 
     else if (selectedLang.value.value === 'php') {
-      output.value = '> Executing PHP via CodeX API...\n'
-      const response = await fetch('https://api.codex.jaagrav.in', {
+      output.value = '> Executing PHP via Piston Mirror...\n'
+      const response = await fetch('https://piston.deno.dev/api/v2/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: code.value,
           language: 'php',
-          input: ''
+          version: '*',
+          files: [{ 
+            name: 'main.php',
+            content: code.value 
+          }]
         })
       })
       const data = await response.json()
-      if (data.output) output.value = data.output
-      else if (data.error) output.value = `Error: ${data.error}`
-      else output.value = '> PHP Execution completed with no output.'
+      if (data.run) {
+        output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> PHP Execution completed.')
+      } else {
+        output.value = `> Error: ${data.message || 'Unable to reach the PHP engine.'}`
+      }
     }
   } catch (error) {
     output.value = `> System Error: ${error}`
