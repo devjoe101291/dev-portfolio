@@ -37,14 +37,30 @@ const loadScript = (src: string) => {
 }
 
 const runPHP = async (source: string) => {
-  // Strategy: Client-side PHP using a robust WebWorker approach or a reliable CORS-enabled Piston bridge
-  // For the "Full Fix", we use a proxy-hardened Piston request
-  const proxy = 'https://api.allorigins.win/raw?url='
-  const target = encodeURIComponent('https://emkc.org/api/v2/piston/execute')
-  
+  // FINAL FULL FIX: Use Judge0's official open demo instance with a more robust request
+  // This instance is highly reliable and CORS-permissive
   try {
-    const response = await fetch(`${proxy}${target}`, {
+    const response = await fetch('https://ce.judge0.com/submissions?wait=true', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source_code: source,
+        language_id: 68, // PHP 8.2.0
+        stdin: ""
+      })
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      return data.stdout || data.stderr || data.compile_output || '> Execution completed (no output).'
+    }
+  } catch (e) { console.warn('Judge0 failed, trying Piston mirror...') }
+
+  // Secondary Fallback: Piston Deno Mirror (Direct)
+  try {
+    const response = await fetch('https://piston.deno.dev/api/v2/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         language: 'php',
         version: '8.2.3',
@@ -53,17 +69,9 @@ const runPHP = async (source: string) => {
     })
     const data = await response.json()
     if (data.run) return data.run.output || data.run.stderr || '> Execution completed.'
-  } catch (e) {
-    // Fallback to CodeX if proxy fails
-    const codexResp = await fetch('https://api.codex.jaagrav.in', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: source, language: 'php', input: '' })
-    })
-    const codexData = await codexResp.json()
-    return codexData.output || codexData.error || '> CodeX execution completed.'
-  }
-  throw new Error('All PHP engines are restricted by CORS. Running local fallback...')
+  } catch (e) { console.warn('Piston Mirror failed.') }
+
+  return '> System Error: All PHP engines are currently unreachable. Please check your internet connection.'
 }
 
 const runCode = async () => {
@@ -96,17 +104,8 @@ const runCode = async () => {
     }
 
     else if (selectedLang.value.value === 'php') {
-      output.value = '> Executing PHP via Cloud Bridge...\n'
-      try {
-        output.value = await runPHP(code.value)
-      } catch (e) {
-        output.value = `> Error: ${e}\n\nTrying legacy fallback...`
-        // Final fallback for PHP: a simple echo interpreter for the demo if all else fails
-        if (code.value.includes('echo')) {
-          const match = code.value.match(/echo "(.*?)";/)
-          if (match) output.value = match[1] + '\n(Local Demo Mode)'
-        }
-      }
+      output.value = '> Executing PHP via Primary Engine...\n'
+      output.value = await runPHP(code.value)
     }
   } catch (error) {
     output.value = `> Execution Error: ${error}`
@@ -130,7 +129,7 @@ const renderPreview = () => {
   }
 
   doc.open()
-  doc.write(`<!DOCTYPE html><html><head><style>body { background: #0d1117; color: #c9d1d9; font-family: sans-serif; padding: 20px; line-height: 1.6; }</style></head><body>${content}</body></html>`)
+  doc.write(`<!DOCTYPE html><html><head><style>body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; padding: 20px; line-height: 1.6; }</style></head><body>${content}</body></html>`)
   doc.close()
 }
 
@@ -200,10 +199,10 @@ onMounted(() => {
          </span>
          <span class="text-[0.6rem] text-gray-500 font-mono flex items-center gap-1">
            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'CLOUD_BRIDGE') }}
+           RUNTIME: {{ ['javascript', 'python'].includes(selectedLang.value) ? 'BROWSER_WASM' : (['vue', 'react', 'html'].includes(selectedLang.value) ? 'LIVE_FRAME' : 'JUDGE0_CORE') }}
          </span>
        </div>
-       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.2</div>
+       <div class="text-[0.6rem] text-gray-600 font-mono uppercase tracking-widest">Joey_Ventulan // Dev_Lab v3.3</div>
     </div>
   </div>
 </template>
