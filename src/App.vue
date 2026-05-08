@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import SnakeGame from './components/SnakeGame.vue'
 
 const typingCommand = ref('cat welcome.txt')
 const currentCommand = ref('')
@@ -59,6 +60,7 @@ const handleLogoHover = (isHover: boolean) => {
         <a href="#services" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
         <a href="#projects" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
         <a href="#skills" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
+        <a href="#playground" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">playground/</a>
         <a href="#contact" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">contact/</a>
       </div>
     </div>
@@ -69,6 +71,7 @@ const handleLogoHover = (isHover: boolean) => {
       <a href="#services" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">services/</a>
       <a href="#projects" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">projects/</a>
       <a href="#skills" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">skills/</a>
+      <a href="#playground" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">playground/</a>
       <a href="#contact" @click="isMobileMenuOpen = false" class="no-underline text-gray-400 font-mono text-sm hover:text-accent transition-colors">contact/</a>
     </div>
   </nav>
@@ -249,6 +252,14 @@ const handleLogoHover = (isHover: boolean) => {
 }
 </pre>
         </div>
+      </div>
+    </section>
+
+    <!-- Playground -->
+    <section id="playground" class="mt-20 md:mt-32 pt-16 md:pt-20">
+      <h2 class="font-mono text-2xl mb-8"><span class="text-gray-600">#</span> interactive_demo</h2>
+      <div class="flex justify-center">
+        <SnakeGame class="w-full max-w-[600px]" />
       </div>
     </section>
 
