@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 
 const languages = [
   { name: 'JavaScript', value: 'javascript', starter: 'console.log("Hello from JS!");\nconst sum = 1 + 2;\nconsole.log(`1 + 2 = ${sum}`);' },
@@ -14,9 +14,13 @@ const output = ref('')
 const isRunning = ref(false)
 const iframeRef = ref<HTMLIFrameElement | null>(null)
 
-watch(selectedLang, (newVal) => {
+watch(selectedLang, async (newVal) => {
   code.value = newVal.starter
   output.value = ''
+  if (newVal.value === 'html') {
+    await nextTick()
+    renderHTML()
+  }
 })
 
 // Load external scripts for WASM
@@ -182,10 +186,10 @@ onMounted(() => {
           {{ selectedLang.value === 'html' ? 'Live_Render' : 'System_Output' }}
         </div>
         
-        <div v-if="selectedLang.value === 'html'" class="flex-1 pt-8">
+        <div v-show="selectedLang.value === 'html'" class="flex-1 pt-8">
           <iframe ref="iframeRef" class="w-full h-full border-none"></iframe>
         </div>
-        <div v-else class="flex-1 p-8 pt-10 font-mono text-sm overflow-y-auto custom-scrollbar">
+        <div v-show="selectedLang.value !== 'html'" class="flex-1 p-8 pt-10 font-mono text-sm overflow-y-auto custom-scrollbar">
           <pre class="text-gray-400 whitespace-pre-wrap">{{ output || '> Ready for execution...' }}</pre>
         </div>
       </div>
