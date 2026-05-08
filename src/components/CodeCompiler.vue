@@ -22,29 +22,49 @@ const runCode = async () => {
   isRunning.value = true
   output.value = '> Initializing environment...\n'
   
+  // Mapping for CodeX API
+  const langMap: Record<string, string> = {
+    'php': 'php',
+    'javascript': 'js',
+    'python': 'py',
+    'c++': 'cpp'
+  }
+
   try {
-    const response = await fetch('https://emkc.org/api/v2/piston/execute', {
+    const response = await fetch('https://api.codex.jaagrav.in', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        language: selectedLang.value.value,
-        version: selectedLang.value.version,
-        files: [{ 
-          name: 'main',
-          content: code.value 
-        }]
+        code: code.value,
+        language: langMap[selectedLang.value.value],
+        input: ''
       })
     })
 
     const data = await response.json()
     
-    if (data.run) {
-      output.value = data.run.output || (data.run.stderr ? `Error:\n${data.run.stderr}` : '> Execution completed with no output.')
+    if (data.output) {
+      output.value = data.output
+    } else if (data.error) {
+      output.value = `Error:\n${data.error}`
     } else {
-      output.value = `> Error: ${data.message || 'Unable to reach the execution engine.'}`
+      output.value = '> Execution completed with no output.'
     }
   } catch (error) {
-    output.value = `> Network Error: ${error}`
+    output.value = `> Network Error: ${error}\nTrying fallback...`
+    // Fallback for JS
+    if (selectedLang.value.value === 'javascript') {
+      try {
+        const logs: string[] = []
+        const originalLog = console.log
+        console.log = (...args) => logs.push(args.join(' '))
+        eval(code.value)
+        console.log = originalLog
+        output.value = logs.join('\n') || '> JS Execution completed.'
+      } catch (e) {
+        output.value = `JS Error: ${e}`
+      }
+    }
   } finally {
     isRunning.value = false
   }
